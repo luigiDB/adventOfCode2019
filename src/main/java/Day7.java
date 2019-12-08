@@ -50,14 +50,15 @@ public class Day7 {
 
     private List<List<Integer>> allFeedbackPermutations() {
         List<List<Integer>> permutations = new LinkedList<>();
-        //evaluateAllPermutations(5, new Integer[]{5, 6, 7, 8, 9}, permutations);
-        permutations.add(List.of(5, 6, 7, 8, 9));
+        evaluateAllPermutations(5, new Integer[]{5, 6, 7, 8, 9}, permutations);
         return permutations;
     }
 
     public int maxAmplificationInFeedbackLoop(String program) {
         int maxOutput = Integer.MIN_VALUE;
         for (List<Integer> combination : allFeedbackPermutations()) {
+
+            //create amplifier feedback loop
             Amplifier[] amplifiers = new Amplifier[5];
             Queue<Integer>[] signals = new Queue[5];
             for (int i = 0; i < 5; i++) {
@@ -65,10 +66,18 @@ public class Day7 {
                 signals[i].offer(combination.get(i));
             }
             for (int i = 0; i < 5; i++) {
-                amplifiers[0] = new Amplifier(program, signals[i], signals[(i + 1) % 5]);
+                amplifiers[i] = new Amplifier(program, signals[i], signals[(i + 1) % 5]);
             }
 
+            //add first signal to first amplifier
+            signals[0].offer(0);
 
+            boolean computationCleared = false;
+            while (!computationCleared) {
+                for (int i = 0; i < 5; i++) {
+                    computationCleared = amplifiers[i].process();
+                }
+            }
 
             maxOutput = Math.max(maxOutput, amplifiers[4].pollOutputs());
         }
@@ -83,13 +92,17 @@ public class Day7 {
 
         public Amplifier(String program, Queue<Integer> inputs, Queue<Integer> outputs) {
             this.program = program;
-            computer = new
+            computer = new IntCodeComputer(program);
             this.inputs = inputs;
             this.outputs = outputs;
         }
 
         public Integer pollOutputs() {
             return outputs.poll();
+        }
+
+        public boolean process() {
+            return computer.process(inputs, outputs);
         }
     }
 }

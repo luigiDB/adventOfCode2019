@@ -4,6 +4,7 @@ import java.util.Stack;
 public class IntCodeComputer {
 
     private final int[] program;
+    private int programIndex = 0;
 
     public IntCodeComputer(int[] inputProgram) {
         program = new int[inputProgram.length];
@@ -27,8 +28,7 @@ public class IntCodeComputer {
         return program;
     }
 
-    public void process(Queue<Integer> userInputs, Queue<Integer> outputs) {
-        int programIndex = 0;
+    public boolean process(Queue<Integer> userInputs, Queue<Integer> outputs) {
         while (program[programIndex] != 99) {
             switch (program[programIndex] % 100) {
                 case 1:
@@ -38,7 +38,11 @@ public class IntCodeComputer {
                     programIndex = opMultiply(program[programIndex] / 100, programIndex);
                     break;
                 case 3:
-                    programIndex = opUserInput(program[programIndex] / 100, programIndex, userInputs);
+                    try {
+                        programIndex = opUserInput(program[programIndex] / 100, programIndex, userInputs);
+                    } catch (Exception e) {
+                        return false;
+                    }
                     break;
                 case 4:
                     programIndex = opOutput(program[programIndex] / 100, programIndex, outputs);
@@ -59,6 +63,7 @@ public class IntCodeComputer {
                     throw new RuntimeException();
             }
         }
+        return true;
     }
 
     private int opSum(int parameterMode, int opIndex) {
@@ -73,7 +78,9 @@ public class IntCodeComputer {
         return opIndex + 4;
     }
 
-    private int opUserInput(int parameterMode, int opIndex, Queue<Integer> userInputs) {
+    private int opUserInput(int parameterMode, int opIndex, Queue<Integer> userInputs) throws Exception {
+        if(userInputs.isEmpty())
+            throw new Exception("Wait for user input");
         program[program[opIndex + 1]] = userInputs.poll();
         return opIndex + 2;
     }
