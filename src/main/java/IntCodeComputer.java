@@ -79,7 +79,7 @@ public class IntCodeComputer {
     }
 
     private int opUserInput(int parameterMode, int opIndex, Queue<Integer> userInputs) throws Exception {
-        if(userInputs.isEmpty())
+        if (userInputs.isEmpty())
             throw new Exception("Wait for user input");
         program[program[opIndex + 1]] = userInputs.poll();
         return opIndex + 2;

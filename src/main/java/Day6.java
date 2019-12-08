@@ -70,7 +70,7 @@ public class Day6 {
 
     private boolean findPath(Node root, Node end, List<Node> path) {
         path.add(root);
-        if(root.equals(end))
+        if (root.equals(end))
             return true;
         for (Node son : root.getSons()) {
             if (findPath(son, end, path))

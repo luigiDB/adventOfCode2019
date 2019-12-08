@@ -106,17 +106,17 @@ public class Day3 {
         wire1OccupiedCells.sort(Comparator.comparingInt(PairWithDistance::getDistance));
         wire2OccupiedCells.sort(Comparator.comparingInt(PairWithDistance::getDistance));
 
-        for (PairWithDistance position: wire1OccupiedCells) {
+        for (PairWithDistance position : wire1OccupiedCells) {
             System.out.println(position.toString());
         }
         System.out.println("-");
-        for (PairWithDistance position: wire2OccupiedCells) {
+        for (PairWithDistance position : wire2OccupiedCells) {
             System.out.println(position.toString());
         }
 
         int minSteps = Integer.MAX_VALUE;
-        for (PairWithDistance position: wire1OccupiedCells) {
-            for (PairWithDistance cross: wire2OccupiedCells) {
+        for (PairWithDistance position : wire1OccupiedCells) {
+            for (PairWithDistance cross : wire2OccupiedCells) {
                 if (position.equals(cross))
                     minSteps = Math.min(minSteps, position.getDistance() + cross.getDistance());
             }
