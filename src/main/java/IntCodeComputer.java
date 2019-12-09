@@ -5,6 +5,7 @@ public class IntCodeComputer {
 
     private final int[] program;
     private int programIndex = 0;
+    private int relativeBase = 0;
 
     public IntCodeComputer(int[] inputProgram) {
         program = new int[inputProgram.length];
@@ -58,6 +59,9 @@ public class IntCodeComputer {
                     break;
                 case 8:
                     programIndex = opEquals(program[programIndex] / 100, programIndex);
+                    break;
+                case 9:
+                    programIndex = opMoveRelativeBase(program[programIndex] / 100, programIndex);
                     break;
                 default:
                     throw new RuntimeException();
@@ -115,14 +119,26 @@ public class IntCodeComputer {
         return opIndex + 4;
     }
 
+    private int opMoveRelativeBase(int parameterMode, int opIndex) {
+        Stack<Integer> parameters = parseParameters(parameterMode, 1, opIndex + 1);
+        relativeBase += parameters.pop();
+        return opIndex + 2;
+    }
+
     private Stack<Integer> parseParameters(int parametersMode, int size, int startIndex) {
         Stack<Integer> parameters = new Stack<>();
         int mode = parametersMode;
         for (int i = 0; i < size; i++) {
-            if (mode % 10 == 1) {
-                parameters.push(program[startIndex + i]);
-            } else {
-                parameters.push(program[program[startIndex + i]]);
+            switch (mode % 10) {
+                case 0:
+                    parameters.push(program[program[startIndex + i]]);
+                    break;
+                case 1:
+                    parameters.push(program[startIndex + i]);
+                    break;
+                case 2:
+                    parameters.push(program[program[startIndex + i] + relativeBase]);
+                    break;
             }
             mode /= 10;
         }
