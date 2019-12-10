@@ -3,64 +3,63 @@ import java.util.Stack;
 
 public class IntCodeComputer {
 
-    private final int[] program;
+    private final long[] program;
     private int programIndex = 0;
     private int relativeBase = 0;
 
-    public IntCodeComputer(int[] inputProgram) {
-        program = new int[inputProgram.length];
-        System.arraycopy(inputProgram, 0, program, 0, inputProgram.length);
-    }
-
     public IntCodeComputer(String inputProgram) {
-        program = stringToIntArray(inputProgram);
+        program = stringToIntArray(inputProgram, 1);
     }
 
-    private static int[] stringToIntArray(String input) {
+    public IntCodeComputer(String inputProgram, int sizeMultiplier) {
+        program = stringToIntArray(inputProgram, sizeMultiplier);
+    }
+
+    private static long[] stringToIntArray(String input, int sizeMultiplier) {
         String[] split = input.split(",");
-        int[] program = new int[split.length];
+        long[] program = new long[split.length * sizeMultiplier];
         for (int i = 0; i < split.length; i++) {
-            program[i] = Integer.parseInt(split[i]);
+            program[i] = Long.parseLong(split[i]);
         }
         return program;
     }
 
-    public int[] getProgram() {
+    public long[] getProgram() {
         return program;
     }
 
-    public boolean process(Queue<Integer> userInputs, Queue<Integer> outputs) {
+    public boolean process(Queue<Long> userInputs, Queue<Long> outputs) {
         while (program[programIndex] != 99) {
-            switch (program[programIndex] % 100) {
-                case 1:
+            switch (Long.valueOf(program[programIndex] % 100).toString()) {
+                case "1":
                     programIndex = opSum(program[programIndex] / 100, programIndex);
                     break;
-                case 2:
+                case "2":
                     programIndex = opMultiply(program[programIndex] / 100, programIndex);
                     break;
-                case 3:
+                case "3":
                     try {
                         programIndex = opUserInput(program[programIndex] / 100, programIndex, userInputs);
                     } catch (Exception e) {
                         return false;
                     }
                     break;
-                case 4:
+                case "4":
                     programIndex = opOutput(program[programIndex] / 100, programIndex, outputs);
                     break;
-                case 5:
+                case "5":
                     programIndex = opJumpIfTrue(program[programIndex] / 100, programIndex);
                     break;
-                case 6:
+                case "6":
                     programIndex = opJumpIfFalse(program[programIndex] / 100, programIndex);
                     break;
-                case 7:
+                case "7":
                     programIndex = opLessThan(program[programIndex] / 100, programIndex);
                     break;
-                case 8:
+                case "8":
                     programIndex = opEquals(program[programIndex] / 100, programIndex);
                     break;
-                case 9:
+                case "9":
                     programIndex = opMoveRelativeBase(program[programIndex] / 100, programIndex);
                     break;
                 default:
@@ -70,74 +69,75 @@ public class IntCodeComputer {
         return true;
     }
 
-    private int opSum(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        program[program[opIndex + 3]] = parameters.pop() + parameters.pop();
+    private int opSum(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        program[parseOutputPosition(parameterMode, 100, opIndex + 3)] = parameters.pop() + parameters.pop();
         return opIndex + 4;
     }
 
-    private int opMultiply(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        program[program[opIndex + 3]] = parameters.pop() * parameters.pop();
+    private int opMultiply(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        program[parseOutputPosition(parameterMode, 100, opIndex + 3)] = parameters.pop() * parameters.pop();
         return opIndex + 4;
     }
 
-    private int opUserInput(int parameterMode, int opIndex, Queue<Integer> userInputs) throws Exception {
+    private int opUserInput(long parameterMode, int opIndex, Queue<Long> userInputs) throws Exception {
         if (userInputs.isEmpty())
             throw new Exception("Wait for user input");
-        program[program[opIndex + 1]] = userInputs.poll();
+        program[parseOutputPosition(parameterMode, 1, opIndex + 1)] = userInputs.poll();
         return opIndex + 2;
     }
 
-    private int opOutput(int parameterMode, int opIndex, Queue<Integer> outputs) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 1, opIndex + 1);
+    private int opOutput(long parameterMode, int opIndex, Queue<Long> outputs) {
+        Stack<Long> parameters = parseParameters(parameterMode, 1, opIndex + 1);
         outputs.offer(parameters.pop());
         return opIndex + 2;
     }
 
-    private int opJumpIfTrue(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        int possibleAddress = parameters.pop();
+    private int opJumpIfTrue(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        int possibleAddress = Math.toIntExact(parameters.pop());
         return (parameters.pop() != 0) ? possibleAddress : opIndex + 3;
     }
 
-    private int opJumpIfFalse(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        int possibleAddress = parameters.pop();
+    private int opJumpIfFalse(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        int possibleAddress = Math.toIntExact(parameters.pop());
         return (parameters.pop() == 0) ? possibleAddress : opIndex + 3;
     }
 
-    private int opLessThan(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        program[program[opIndex + 3]] = (parameters.pop().compareTo(parameters.pop()) > 0) ? 1 : 0;
+    private int opLessThan(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        program[parseOutputPosition(parameterMode, 100, opIndex + 3)] = (parameters.pop().compareTo(parameters.pop()) > 0) ? 1 : 0;
         return opIndex + 4;
     }
 
-    private int opEquals(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 2, opIndex + 1);
-        program[program[opIndex + 3]] = (parameters.pop().equals(parameters.pop())) ? 1 : 0;
+    private int opEquals(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 2, opIndex + 1);
+        program[parseOutputPosition(parameterMode, 100, opIndex + 3)] = (parameters.pop().equals(parameters.pop())) ? 1 : 0;
         return opIndex + 4;
     }
 
-    private int opMoveRelativeBase(int parameterMode, int opIndex) {
-        Stack<Integer> parameters = parseParameters(parameterMode, 1, opIndex + 1);
+    private int opMoveRelativeBase(long parameterMode, int opIndex) {
+        Stack<Long> parameters = parseParameters(parameterMode, 1, opIndex + 1);
+        //int i = parseOutputPosition(parameterMode, 1, opIndex + 1);
         relativeBase += parameters.pop();
         return opIndex + 2;
     }
 
-    private Stack<Integer> parseParameters(int parametersMode, int size, int startIndex) {
-        Stack<Integer> parameters = new Stack<>();
-        int mode = parametersMode;
+    private Stack<Long> parseParameters(long parametersMode, int size, int startIndex) {
+        Stack<Long> parameters = new Stack<>();
+        long mode = parametersMode;
         for (int i = 0; i < size; i++) {
-            switch (mode % 10) {
-                case 0:
-                    parameters.push(program[program[startIndex + i]]);
+            switch (Long.valueOf(mode % 10).toString()) {
+                case "0":
+                    parameters.push(program[(int) program[startIndex + i]]);
                     break;
-                case 1:
+                case "1":
                     parameters.push(program[startIndex + i]);
                     break;
-                case 2:
-                    parameters.push(program[program[startIndex + i] + relativeBase]);
+                case "2":
+                    parameters.push(program[(int) (program[startIndex + i]) + relativeBase]);
                     break;
             }
             mode /= 10;
@@ -145,4 +145,18 @@ public class IntCodeComputer {
         return parameters;
     }
 
+    private int parseOutputPosition(long parametersMode, int divisor, int index) {
+        int resultAddress = 0;
+        switch (Long.valueOf(parametersMode / divisor % 10).toString()) {
+            case "0":
+                resultAddress = (int) program[index];
+                break;
+            case "1":
+                throw new RuntimeException();
+            case "2":
+                resultAddress = (int) program[index] + relativeBase;
+                break;
+        }
+        return resultAddress;
+    }
 }
