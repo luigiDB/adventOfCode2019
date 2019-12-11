@@ -1,13 +1,13 @@
 import org.apache.commons.lang3.tuple.Pair;
 
-import java.util.HashSet;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Day10 {
 
     public int maxVisibleAsteroids(String[] map) {
         Set<Pair<Double, Double>> asteroids = getAsteroids(map);
+        Pair<Double, Double> baseAsteroid = null;
 
         int maxVisibility = Integer.MIN_VALUE;
 
@@ -23,10 +23,13 @@ public class Day10 {
                         otherAsteroid.getRight() - asteroid.getRight()
                 ));
             }
-            maxVisibility = Math.max(maxVisibility, visibilityLines.size());
-            System.out.println(asteroid.toString() + "  -  " + visibilityLines.size());
+            if (visibilityLines.size() > maxVisibility) {
+                maxVisibility = Math.max(maxVisibility, visibilityLines.size());
+                baseAsteroid = asteroid;
+            }
         }
 
+        System.out.println(baseAsteroid);
         return maxVisibility;
     }
 
@@ -40,6 +43,64 @@ public class Day10 {
             }
         }
         return asteroids;
+    }
+
+    public Pair<Double, Double> get200Asteroid(String[] map, Pair<Double, Double> laserPlace, int pos) {
+        Set<Pair<Double, Double>> asteroids = getAsteroids(map);
+
+        Map<LineDirection, List<Pair<Double, Pair<Double, Double>>>> visibilityLines = new HashMap<>();
+
+        for (Pair<Double, Double> asteroid : asteroids) {
+            if (asteroid.equals(laserPlace))
+                continue;
+            double yDistance = laserPlace.getRight() - asteroid.getRight();
+            double xDistance = laserPlace.getLeft() - asteroid.getLeft();
+            LineDirection direction = new LineDirection(
+                    yDistance / xDistance,
+                    xDistance > 0 ? 1 : -1,
+                    yDistance > 0 ? 1 : -1
+            );
+            visibilityLines.compute(direction,
+                    (k, v) -> {
+                        if (v == null) {
+                            v = new LinkedList<>();
+                        }
+                        double distance = Math.sqrt(Math.pow(xDistance, 2) + Math.pow(yDistance, 2));
+                        v.add(Pair.of(distance, asteroid));
+                        return v;
+                    });
+        }
+
+        for (List<Pair<Double, Pair<Double, Double>>> list : visibilityLines.values()) {
+            list.sort(Comparator.comparingDouble(Pair::getLeft));
+        }
+
+        List<LineDirection> directions = new LinkedList<>();
+        directions.addAll(visibilityLines.keySet());
+        directions.sort(Comparator.comparingInt(LineDirection::getQuadrant).thenComparing(LineDirection::getCoefficient));
+        Map<Integer, List<LineDirection>> collect = directions.stream().collect(Collectors.groupingBy(LineDirection::getQuadrant));
+
+        directions = new LinkedList<>();
+        collect.get(0).sort(Comparator.comparing(x -> x.getCoefficient()));
+        directions.addAll(collect.get(0));
+        collect.get(1).sort(Comparator.comparing(x -> Math.abs(x.getCoefficient())));
+        directions.addAll(collect.get(1));
+        collect.get(2).sort(Comparator.comparing(x -> x.getCoefficient()));
+        directions.addAll(collect.get(2));
+        collect.get(3).sort(Comparator.comparing(x -> Math.abs(x.getCoefficient())));
+        directions.addAll(collect.get(3));
+
+        LineDirection infinityDirection = new LineDirection(Double.POSITIVE_INFINITY, -1, 1);
+        boolean removed = directions.remove(infinityDirection);
+        if(removed)
+            directions.add(0, infinityDirection);
+
+        for (LineDirection dir : directions)
+            System.out.println(dir.toString() + "\t\t" + visibilityLines.get(dir).toString());
+
+        List<Pair<Double, Pair<Double, Double>>> pairs = visibilityLines.get(directions.get(pos));
+
+        return pairs.get(0).getRight();
     }
 
     private class LineDirection {
@@ -67,5 +128,30 @@ public class Day10 {
         public int hashCode() {
             return Objects.hash(coefficient, xDirection, yDirection);
         }
+
+        public double getCoefficient() {
+            return coefficient;
+        }
+
+        public int getQuadrant() {
+            if (xDirection == '+' && yDirection == '+')
+                return 3;
+            if (xDirection == '+' && yDirection == '-')
+                return 2;
+            if (xDirection == '-' && yDirection == '-')
+                return 1;
+            if (xDirection == '-' && yDirection == '+')
+                return 0;
+            throw new RuntimeException();
+        }
+
+        @Override
+        public String toString() {
+            return xDirection +
+                    "  " + yDirection +
+                    "  " + coefficient;
+        }
     }
+
+
 }
