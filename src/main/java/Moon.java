@@ -1,3 +1,5 @@
+import java.util.Arrays;
+
 public class Moon {
 
     private int[] pos;
@@ -11,6 +13,10 @@ public class Moon {
     public Moon(int[] totalInit) {
         pos = new int[]{totalInit[0], totalInit[1], totalInit[2]};
         vel = new int[]{totalInit[3], totalInit[4], totalInit[5]};
+    }
+
+    public int[] dump() {
+        return new int[]{pos[0], pos[1], pos[2], vel[0], vel[1], vel[2]};
     }
 
     public void updatePos() {
@@ -45,4 +51,11 @@ public class Moon {
         this.vel = vel;
     }
 
+    @Override
+    public String toString() {
+        return "{" +
+                Arrays.toString(pos) +
+                Arrays.toString(vel) +
+                '}';
+    }
 }

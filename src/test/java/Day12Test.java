@@ -121,4 +121,47 @@ public class Day12Test {
         Moon[] actualSystem = day12.systemAtTime(staringPositions, 1000);
         Assert.assertEquals(7013L, Arrays.stream(actualSystem).mapToLong(Moon::energy).sum());
     }
+
+    @Test
+    public void es2Acceptance() {
+        List<int[]> staringPositions = List.of(
+                new int[]{-1, 0, 2, 0, 0, 0},
+                new int[]{2, -10, -7, 0, 0, 0},
+                new int[]{4, -8, 8, 0, 0, 0},
+                new int[]{3, 5, -1, 0, 0, 0}
+        );
+        Assert.assertEquals("2772", day12.universeCycle(staringPositions));
+    }
+
+    public void es2Acceptance2() {
+        List<int[]> staringPositions = List.of(
+                new int[]{-8, -10, 0, 0, 0, 0},
+                new int[]{5, 5, 10, 0, 0, 0},
+                new int[]{2, -7, 3, 0, 0, 0},
+                new int[]{9, -8, -3, 0, 0, 0}
+        );
+        Assert.assertEquals("4686774924", day12.universeCycle(staringPositions));
+    }
+
+    @Test
+    public void es2Acceptance2bis() {
+        List<int[]> staringPositions = List.of(
+                new int[]{-8, -10, 0, 0, 0, 0},
+                new int[]{5, 5, 10, 0, 0, 0},
+                new int[]{2, -7, 3, 0, 0, 0},
+                new int[]{9, -8, -3, 0, 0, 0}
+        );
+        Assert.assertEquals("4686774924", day12.universeCycleLcm(staringPositions));
+    }
+
+    @Test
+    public void es2() {
+        List<int[]> staringPositions = List.of(
+                new int[]{-7, 17, -11, 0, 0, 0},
+                new int[]{9, 12, 5, 0, 0, 0},
+                new int[]{-9, 0, -4, 0, 0, 0},
+                new int[]{4, 6, 0, 0, 0, 0}
+        );
+        Assert.assertEquals("324618307124784", day12.universeCycleLcm(staringPositions));
+    }
 }
