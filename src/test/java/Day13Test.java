@@ -40,7 +40,7 @@ public class Day13Test {
         return commands;
     }
 
-    private char codeToSimbol(long code) {
+    private char codeToSymbol(long code) {
         char s = ' ';
         switch ((int) code) {
             case 0:
@@ -136,7 +136,7 @@ public class Day13Test {
     private void printGameBoard(long[][] gameBoard) {
         for (int i = 0; i < gameBoard.length; i++) {
             for (int j = 0; j < gameBoard[i].length; j++) {
-                System.out.print(codeToSimbol(gameBoard[i][j]));
+                System.out.print(codeToSymbol(gameBoard[i][j]));
             }
             System.out.println(" ");
         }
