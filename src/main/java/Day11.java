@@ -5,7 +5,7 @@ import java.util.*;
 public class Day11 {
 
 
-    public int coloredPanels(String program, int startingColor) {
+    public Pair<Set<Pair<Integer, Integer>>, Map<Pair<Integer, Integer>, Integer>> coloredPanels(String program, int startingColor) {
         IntCodeComputer computer = new IntCodeComputer(program, 10000);
         Queue<Long> userInputs = new LinkedList<>();
         Queue<Long> outputs = new LinkedList<>();
@@ -35,7 +35,7 @@ public class Day11 {
             currentPosition.rotate(Math.toIntExact(outputs.poll()));
         }
 
-        return paintedTiles.size();
+        return Pair.of(paintedTiles, tileMap);
     }
 
     private enum Direction {
