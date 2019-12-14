@@ -1,16 +1,21 @@
-import org.apache.commons.lang3.tuple.Pair;
-
+import java.math.BigInteger;
 import java.util.*;
 
 public class Day14 {
 
-    public int oreRequiredForOneFuel(String input) {
-        Map<Resource, List<Resource>> dependencies = buildDependencies(input);
 
-        Resource fuel = dependencies.keySet().stream().filter(x -> x.getName().equals("FUEL")).findFirst().get();
+    private final Map<Resource, List<Resource>> dependencies;
+    private List<Resource> totalOverproduction;
+
+    public Day14(String input) {
+        dependencies = buildDependencies(input);
+    }
+
+    public Resource oreRequiredForFuel(int fuelAmount) {
+        Resource fuel = new Resource("FUEL", new BigInteger(String.valueOf(fuelAmount)));
 
         List<Resource> productionLine = initEmptyResourceList(dependencies);
-        List<Resource> totalOverproduction = initEmptyResourceList(dependencies);
+        totalOverproduction = initEmptyResourceList(dependencies);
 
         Set<Resource> round = Set.of(fuel);
         while (!(round.size() == 1 && round.stream().anyMatch(x -> x.getName().equals("ORE")))) {
@@ -21,18 +26,14 @@ public class Day14 {
                     continue;
 
                 Resource oldOverproduction = totalOverproduction.stream().filter(x -> x.equals(resource)).findFirst().get();
-                int howManyToProduce = resource.getQty() - oldOverproduction.getQty();
-                if (howManyToProduce < 0) {
-                    oldOverproduction.setQty(Math.abs(howManyToProduce));
-                    continue;
-                }
+                BigInteger howManyToProduce = resource.getQty().subtract(oldOverproduction.getQty());
 
                 Map.Entry<Resource, List<Resource>> reaction = dependencies.entrySet().stream().filter(x -> x.getKey().getName().equals(resource.getName())).findFirst().get();
 
-                int numberOfReactions = (howManyToProduce + reaction.getKey().getQty() - 1) / reaction.getKey().getQty();
+                BigInteger numberOfReactions = howManyToProduce.add(reaction.getKey().getQty()).subtract(BigInteger.ONE).divide(reaction.getKey().getQty());
 
                 for (Resource qtyUpdate : reaction.getValue()) {
-                    int newProductionLots = qtyUpdate.getQty() * numberOfReactions;
+                    BigInteger newProductionLots = qtyUpdate.getQty().multiply(numberOfReactions);
                     productionLine.get(productionLine.indexOf(qtyUpdate)).sumQty(newProductionLots);
                     if (nextRound.contains(qtyUpdate)) {
                         nextRound.stream().filter(x -> x.getName().equals(qtyUpdate.getName())).findFirst().get().sumQty(newProductionLots);
@@ -41,12 +42,12 @@ public class Day14 {
                     }
                 }
 
-                oldOverproduction.setQty((reaction.getKey().getQty() * numberOfReactions) - howManyToProduce);
+                oldOverproduction.setQty((reaction.getKey().getQty().multiply(numberOfReactions)).subtract(howManyToProduce));
             }
             round = nextRound;
         }
 
-        return productionLine.stream().filter(x -> x.getName().equals("ORE")).findFirst().get().getQty();
+        return productionLine.stream().filter(x -> x.getName().equals("ORE")).findFirst().get();
     }
 
     private List<Resource> initEmptyResourceList(Map<Resource, List<Resource>> input) {
@@ -80,19 +81,54 @@ public class Day14 {
     private Resource formatResource(String section) {
         String[] s = section.trim().split(" ");
         Resource resource = new Resource(s[1].trim());
-        resource.sumQty(Integer.parseInt(s[0].trim()));
+        resource.sumQty(new BigInteger(s[0].trim()));
         return resource;
     }
 
-    private class Resource {
+    public String maximumAmountOfFuel() {
+        BigInteger maximumOres = new BigInteger("1000000000000");
+
+        int maximumI = 0;
+        int i = Integer.MAX_VALUE / 2;
+        int step = 4;
+        while (step >= 1) {
+            Resource ores = oreRequiredForFuel(i);
+            System.out.println(i + "\t\t" + ores.toString());
+            BigInteger distance = maximumOres.subtract(ores.getQty());
+            if (distance.signum() > 0) {
+                maximumI = Math.max(maximumI, i);
+            }
+            if (ores.getQty().compareTo(maximumOres) > 0) {
+                i = i - (Integer.MAX_VALUE / step);
+            } else {
+                i = i + (Integer.MAX_VALUE / step);
+            }
+            step *= 2;
+            if (step == 0) {
+                step = 1;
+            }
+        }
+
+        int counter = maximumI;
+        while (true) {
+            Resource ores = oreRequiredForFuel(counter);
+            if (ores.getQty().compareTo(maximumOres) > 0)
+                break;
+            counter++;
+        }
+
+        return Integer.valueOf(counter-1).toString();
+    }
+
+    public class Resource {
         private String name;
-        private int qty = 0;
+        private BigInteger qty = BigInteger.ZERO;
 
         public Resource(String name) {
             this.name = name;
         }
 
-        public Resource(String name, int qty) {
+        public Resource(String name, BigInteger qty) {
             this.name = name;
             this.qty = qty;
         }
@@ -114,16 +150,16 @@ public class Day14 {
             return name;
         }
 
-        public int getQty() {
-            return qty;
-        }
-
-        public void setQty(int qty) {
+        public void setQty(BigInteger qty) {
             this.qty = qty;
         }
 
-        public void sumQty(int qty) {
-            this.qty += qty;
+        public void sumQty(BigInteger qty) {
+            this.qty = this.qty.add(qty);
+        }
+
+        public BigInteger getQty() {
+            return qty;
         }
 
         @Override
