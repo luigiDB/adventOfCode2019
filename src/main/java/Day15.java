@@ -103,13 +103,39 @@ public class Day15 {
         }
         return possibleSteps;
     }
-
+    
     public int minStepsToReachOxygen() {
+        Map<Pair<Integer, Integer>, Integer> distance = dijkstraTrip(Pair.of(startingPoint[0], startingPoint[1]));
+
+        for (int i = 0; i < env.length; i++) {
+            for (int j = 0; j < env[i].length; j++) {
+                if (env[i][j] == 3 || env[i][j] == 5)
+                    return distance.get(Pair.of(i, j));
+            }
+        }
+
+        throw new RuntimeException();
+    }
+
+    public int timeToRefillShipWithOxygen() {
+        Pair<Integer, Integer> start = null;
+        for (int i = 0; i < env.length; i++) {
+            for (int j = 0; j < env[i].length; j++) {
+                if (env[i][j] == 3 || env[i][j] == 5)
+                    start = Pair.of(i, j);
+            }
+        }
+
+        Map<Pair<Integer, Integer>, Integer> distanceMap = dijkstraTrip(start);
+        return distanceMap.values().stream().max(Integer::compareTo).get();
+    }
+
+    private Map<Pair<Integer, Integer>, Integer> dijkstraTrip(Pair<Integer, Integer> start) {
         PriorityQueue<Pair<Integer, Integer>> priorityQueue = new PriorityQueue<>();
         Map<Pair<Integer, Integer>, Integer> distance = new HashMap<>();
 
-        priorityQueue.add(Pair.of(startingPoint[0], startingPoint[1]));
-        distance.put(Pair.of(startingPoint[0], startingPoint[1]), 0);
+        priorityQueue.add(start);
+        distance.put(start, 0);
 
         while (!priorityQueue.isEmpty()) {
             Pair<Integer, Integer> poll = priorityQueue.poll();
@@ -122,16 +148,9 @@ public class Day15 {
                 }
             }
         }
-
-        for (int i = 0; i < env.length; i++) {
-            for (int j = 0; j < env[i].length; j++) {
-                if (env[i][j] == 3 || env[i][j] == 5)
-                    return distance.get(Pair.of(i, j));
-            }
-        }
-
-        throw new RuntimeException();
+        return distance;
     }
+
 
     private long directionToNumber(int[] direction) {
         if (direction[0] == directions[0] && direction[1] == directions[1])
